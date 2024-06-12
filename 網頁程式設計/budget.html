@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Account Management</title>
+    <style>
+        body {
+            font-family: "SimSun", sans-serif;
+            margin-left: 20px;
+            margin-right: 20px;
+        }
+        div {
+            margin-bottom: 20px;
+        }
+        label {
+            margin-right: 10px;
+        }
+        input {
+            margin-right: 20px;
+        }
+        button {
+            display: block;
+            margin: 20px 0;
+            font-family: "SimSun", sans-serif;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: #333;
+            padding: 10px 20px;
+            color: #fff;
+        }
+
+        .title {
+            font-size: 1.5rem;
+        }
+
+        ul.drop-down-menu {
+            list-style: none;   /* 移除項目符號 */
+            padding: 0;
+            margin: 0;
+            display: flex;
+        }
+
+        ul.drop-down-menu > li {
+            position: relative;
+        }
+
+        ul.drop-down-menu a {
+            text-decoration: none;
+            padding: 10px 20px;
+            display: block;
+            color: #fff;
+            white-space: nowrap; /* 防止文本换行 */
+        }
+
+        ul.drop-down-menu a:hover {
+            background-color: #575757;
+        }
+
+        ul.drop-down-menu ul {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background-color: #fff;
+            z-index: 99;
+            min-width: 200px; /* 調整這個值來設置次級選單的最小寬度 */
+            width: auto; /* 根據內容自動調整寬度 */
+            padding: 0; /* 移除內邊距 */
+            margin: 0; /* 移除外邊距 */
+        }
+
+        ul.drop-down-menu ul li {
+            border-bottom: #ccc 1px solid;
+        }
+
+        ul.drop-down-menu ul li:last-child {
+            border-bottom: none;
+        }
+
+        ul.drop-down-menu ul ul { /* 第三層以後的選單出現位置與第二層不同 */
+            position: absolute;
+            top: 0;
+            left: 100%;
+            z-index: 999;
+            padding: 0; /* 移除內邊距 */
+            margin: 0; /* 移除外邊距 */
+        }
+
+        ul.drop-down-menu li:hover > ul {
+            display: block;
+        }
+
+        ul.drop-down-menu ul li a {
+            color: #000;
+            padding: 10px 20px; /* 調整內邊距以配合外部鏈接 */
+        }
+
+        ul.drop-down-menu ul li a:hover {
+            background-color: #eee;
+        }
+
+        ul.drop-down-menu ul ul {
+            min-width: 200px; /* 調整這個值來設置次級選單的最小寬度 */
+            width: auto; /* 根據內容自動調整寬度 */
+        }
+
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <div class="title">我的預算規劃</div>
+        <ul class="drop-down-menu">
+            <li><a href="index.html">回到首頁</a></li>
+            <li><a href="forus.html">關於我們</a></li>
+            <li><a href="#">帳務管理</a>
+                <ul>
+                    <li><a href="expense.html">新增帳務紀錄</a></li>
+                    <li><a href="budget.html">我的預算規劃</a></li>
+                    <li><a href="manage.html">我的帳務管理</a></li>
+                    <li><a href="#">我的帳務分析</a></li>
+                </ul>
+            </li>
+            <li><a href="#">待辦事項</a>
+                <ul>
+                    <li><a href="calender.html">我的月曆</a></li>
+                    <li><a href="todo.html">新增待辦事項</a></li>
+                    <li><a href="check.html">歷史紀錄查詢</a></li>
+                </ul>
+            </li>
+            <li><a href="more.html">了解更多</a></li>
+            <li><a href="feedback.html">問題反饋</a></li>
+        </ul>
+    </header>
+    <h1>月預算規劃</h1>
+    <div>
+        <label for="month">請選擇欲規劃的月份：</label>
+        <input type="month" id="month">
+    </div>
+    <div>
+        <label for="total-budget">請輸入當月份總預算：</label>
+        <input type="number" id="total-budget">
+    </div>
+    <div>
+        <h2>分配該月預算</h2>
+        <div id="budget-allocation">
+            <div>
+                <label for="category-1">種類：</label>
+                <input type="text" id="category-1" placeholder="e.g., Food">
+                <label for="amount-1">金額：</label>
+                <input type="number" id="amount-1" placeholder="e.g., 400">
+            </div>
+        </div>
+        <button onclick="addCategory()">新增一筆預算</button>
+    </div>
+    <button onclick="generateChart()">儲存繪製圓餅圖</button>
+    <canvas id="budget-chart" width="400" height="400"></canvas>
+
+    <script>
+        let categoryCount = 1;
+
+        function addCategory() {
+            categoryCount++;
+            const div = document.createElement('div');
+            div.innerHTML = `
+                <label for="category-${categoryCount}">Category:</label>
+                <input type="text" id="category-${categoryCount}" placeholder="e.g., Transport">
+                <label for="amount-${categoryCount}">Amount:</label>
+                <input type="number" id="amount-${categoryCount}" placeholder="e.g., 300">
+            `;
+            document.getElementById('budget-allocation').appendChild(div);
+        }
+
+        function generateChart() {
+            const labels = [];
+            const data = [];
+            for (let i = 1; i <= categoryCount; i++) {
+                const category = document.getElementById(`category-${i}`).value;
+                const amount = document.getElementById(`amount-${i}`).value;
+                if (category && amount) {
+                    labels.push(category);
+                    data.push(amount);
+                }
+            }
+
+            const ctx = document.getElementById('budget-chart').getContext('2d');
+            new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)',
+                            'rgba(255, 159, 64, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)',
+                            'rgba(255, 159, 64, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+    </script>
+</body>
+</html>
